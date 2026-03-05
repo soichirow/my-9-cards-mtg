@@ -600,9 +600,24 @@ footer {
   text-decoration: none;
 }
 
-.footer-links a:hover, .footer-credit a:hover {
+.footer-links a:hover, .footer-credit a:hover, .footer-legal a:hover {
   color: #3b82f6;
   text-decoration: underline;
+}
+
+.footer-legal {
+  margin-top: 12px;
+  font-size: 0.55rem;
+  color: #c0c8d0;
+  line-height: 1.5;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footer-legal a {
+  color: #b0bec5;
+  text-decoration: none;
 }
 
 /* ── Desktop: wider grid ── */
