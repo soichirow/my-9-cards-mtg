@@ -771,7 +771,7 @@
 
   function shareOnX() {
     var shareUrl = buildShareUrl();
-    var text = "私を構成する9枚のカード\n#私を構成する9つのカード #My9MTGCards\n" + shareUrl;
+    var text = "私を構成する9枚のカード\n#私を作ったマジック9枚 #My9MTGCards\n" + shareUrl;
     var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(tweetUrl, "_blank");
   }
