@@ -56,6 +56,24 @@
 
   var T = (typeof window.SITE_LANG === "object") ? window.SITE_LANG : defaultLang;
 
+  // ── Share Log ──
+  var GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxgt89hM12PZMQRsIzySr_FpQ16DIo0PAz69256fZQZKy_kHaqlOCCf8kVlY1FAqsxiEw/exec";
+
+  function logShare(platform) {
+    if (!GAS_ENDPOINT) return;
+    var cards = selected.filter(Boolean).map(function (card) {
+      return getDisplayName(card);
+    });
+    var lang = (document.documentElement.lang === "en") ? "en" : "ja";
+    var body = JSON.stringify({ lang: lang, platform: platform, cards: cards });
+    try {
+      fetch(GAS_ENDPOINT, {
+        method: "POST",
+        body: body
+      }).catch(function () { /* ログ送信失敗は無視 */ });
+    } catch (e) { /* ignore */ }
+  }
+
   // ── State ──
   var selected = new Array(MAX_CARDS).fill(null);
   var activeSlotIndex = -1;
@@ -808,6 +826,7 @@
     try {
       await navigator.clipboard.writeText(url);
       warnEl.textContent = T.linkCopied;
+      logShare("copy_link");
     } catch (e) {
       try {
         var ta = document.createElement("textarea");
@@ -818,6 +837,7 @@
         document.execCommand("copy");
         document.body.removeChild(ta);
         warnEl.textContent = T.linkCopied;
+        logShare("copy_link");
       } catch (e2) {
         warnEl.textContent = T.copyFailed;
       }
@@ -829,6 +849,7 @@
     var text = T.shareText(shareUrl);
     var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(tweetUrl, "_blank");
+    logShare("x");
   }
 
   function shareOnBluesky() {
@@ -836,12 +857,14 @@
     var text = T.shareText(shareUrl);
     var bskyUrl = "https://bsky.app/intent/compose?text=" + encodeURIComponent(text);
     window.open(bskyUrl, "_blank");
+    logShare("bluesky");
   }
 
   function shareOnReddit() {
     var shareUrl = buildShareUrl();
     var redditUrl = "https://www.reddit.com/submit?url=" + encodeURIComponent(shareUrl) + "&title=" + encodeURIComponent(T.imageTitle);
     window.open(redditUrl, "_blank");
+    logShare("reddit");
   }
 
   // ════════════════════════════════════════
@@ -970,6 +993,7 @@
             await navigator.share({ files: [file] });
             shared = true;
             warnEl.textContent = T.shared;
+            logShare("image_share");
           }
         } catch (e) {
           // ユーザーキャンセルなど — ダウンロードにフォールバック
@@ -983,6 +1007,7 @@
         link.click();
         setTimeout(function () { URL.revokeObjectURL(link.href); }, 10000);
         warnEl.textContent = T.imageSaved;
+        logShare("image_save");
       }
     } catch (err) {
       warnEl.textContent = T.imageError(err.message);
