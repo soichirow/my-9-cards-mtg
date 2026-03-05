@@ -233,6 +233,9 @@ main {
 
 .btn-save:hover:not(:disabled) { color: #10b981; border-color: #6ee7b7; background: #ecfdf5; }
 
+.btn-tweet { color: #000; }
+.btn-tweet:hover:not(:disabled) { background: #f0f0f0; border-color: #999; }
+
 /* ── Modal ── */
 .modal-overlay {
   display: none;

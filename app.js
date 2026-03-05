@@ -18,7 +18,7 @@
   var countLabel = document.getElementById("countLabel");
   var clearBtn = document.getElementById("clearBtn");
   var copyBtn = document.getElementById("copyBtn");
-  var openBtn = document.getElementById("openBtn");
+  var tweetBtn = document.getElementById("tweetBtn");
   var saveImgBtn = document.getElementById("saveImgBtn");
   var warnEl = document.getElementById("warn");
   var restoreStatusEl = document.getElementById("restoreStatus");
@@ -177,7 +177,7 @@
     countLabel.textContent = count;
     clearBtn.disabled = count === 0;
     copyBtn.disabled = count === 0;
-    openBtn.disabled = count === 0;
+    tweetBtn.disabled = count === 0;
     saveImgBtn.disabled = count === 0;
 
     if (count > 0 && count < MAX_CARDS) {
@@ -742,8 +742,11 @@
     }
   }
 
-  function openShareLink() {
-    window.open(buildShareUrl(), "_blank");
+  function shareOnX() {
+    var shareUrl = buildShareUrl();
+    var text = "私を構成する9枚のカード\n#私を構成する9つのカード #9mtgcard\n" + shareUrl;
+    var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
+    window.open(tweetUrl, "_blank");
   }
 
   // ════════════════════════════════════════
@@ -768,10 +771,6 @@
   async function saveAsImage() {
     if (filledCount() === 0) return;
 
-    var userName = prompt("画像に表示する名前（空欄でスキップ）", "");
-    if (userName === null) return; // cancelled
-    userName = userName.trim();
-
     saveImgBtn.disabled = true;
     saveImgBtn.textContent = "生成中...";
 
@@ -781,13 +780,11 @@
       var GAP = 8;
       var COLS = 3;
       var PADDING = 20;
-      var HEADER_H = 56;
-      var FOOTER_H = userName ? 36 : 16;
+      var HEADER_H = 44;
+      var FOOTER_H = 12;
 
       var gridW = COLS * CARD_W + (COLS - 1) * GAP;
-      var rows = Math.ceil(filledCount() / COLS) || 1;
-      // Always use 3 rows for 9-slot grid
-      rows = 3;
+      var rows = 3;
       var gridH = rows * CARD_H + (rows - 1) * GAP;
 
       var canvasW = gridW + PADDING * 2;
@@ -804,14 +801,9 @@
 
       // Title
       ctx.fillStyle = "#1e293b";
-      ctx.font = "bold 18px 'Noto Sans JP', sans-serif";
+      ctx.font = "bold 16px 'Noto Sans JP', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("私を構成する9枚のカード", canvasW / 2, PADDING + 20);
-
-      // Subtitle
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "10px 'Noto Sans JP', sans-serif";
-      ctx.fillText("MTGカードを選んで、あなたを表す9枚を共有しよう", canvasW / 2, PADDING + 38);
+      ctx.fillText("私を構成する9枚のカード", canvasW / 2, PADDING + 18);
 
       // Load and draw card images
       var imagePromises = selected.map(function (card, idx) {
@@ -868,14 +860,6 @@
         }
       }
 
-      // Creator name (optional)
-      if (userName) {
-        ctx.fillStyle = "#64748b";
-        ctx.font = "11px 'Noto Sans JP', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("by " + userName, canvasW / 2, canvasH - 10);
-      }
-
       // Download
       var link = document.createElement("a");
       link.download = "my-9-cards.png";
@@ -910,7 +894,7 @@
   // Actions
   clearBtn.addEventListener("click", clearAll);
   copyBtn.addEventListener("click", copyShareLink);
-  openBtn.addEventListener("click", openShareLink);
+  tweetBtn.addEventListener("click", shareOnX);
   saveImgBtn.addEventListener("click", saveAsImage);
 
   // Dismiss active overlays on outside click
