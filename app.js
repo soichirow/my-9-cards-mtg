@@ -717,27 +717,32 @@
   // ════════════════════════════════════════
 
   function loadImage(url) {
-    // fetch → blob → dataURL → Image の順で変換し、
-    // file:// でも tainted canvas を回避する
-    return fetch(url)
-      .then(function (r) { return r.blob(); })
-      .then(function (blob) {
-        return new Promise(function (resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function () { resolve(reader.result); };
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      })
-      .then(function (dataUrl) {
-        return new Promise(function (resolve) {
-          var img = new Image();
-          img.onload = function () { resolve(img); };
-          img.onerror = function () { resolve(null); };
-          img.src = dataUrl;
-        });
-      })
-      .catch(function () { return null; });
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function () { resolve(img); };
+      img.onerror = function () {
+        console.error("Image load failed:", url);
+        // fallback: fetch → blob → objectURL
+        fetch(url)
+          .then(function (r) { return r.blob(); })
+          .then(function (blob) {
+            var objUrl = URL.createObjectURL(blob);
+            var img2 = new Image();
+            img2.onload = function () {
+              URL.revokeObjectURL(objUrl);
+              resolve(img2);
+            };
+            img2.onerror = function () {
+              URL.revokeObjectURL(objUrl);
+              resolve(null);
+            };
+            img2.src = objUrl;
+          })
+          .catch(function () { resolve(null); });
+      };
+      img.src = url;
+    });
   }
 
   async function saveAsImage() {
@@ -789,14 +794,23 @@
       ctx.fillText("MTGカードを選んで、あなたを表す9枚を共有しよう", canvasW / 2, PADDING + 38);
 
       // Load and draw card images
-      var imagePromises = selected.map(function (card) {
+      var imagePromises = selected.map(function (card, idx) {
         if (!card) return Promise.resolve(null);
         var url = getImageUrl(card);
-        if (!url) return Promise.resolve(null);
-        return loadImage(url);
+        if (!url) {
+          console.warn("Slot " + idx + ": no image URL", card.name);
+          return Promise.resolve(null);
+        }
+        console.log("Slot " + idx + ": loading", url);
+        return loadImage(url).then(function (img) {
+          console.log("Slot " + idx + ":", img ? "OK" : "FAILED");
+          return img;
+        });
       });
 
       var images = await Promise.all(imagePromises);
+      var loaded = images.filter(Boolean).length;
+      console.log("Images loaded: " + loaded + " / " + filledCount());
 
       for (var i = 0; i < MAX_CARDS; i++) {
         var col = i % COLS;
