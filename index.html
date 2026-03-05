@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>私を構成する9枚のカード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>私を構成する9枚のカード</h1>
+  <p class="subtitle">MTGカードを選んで、あなたを表す9枚を共有しよう</p>
+</header>
+
+<main>
+  <!-- 3×3 Grid -->
+  <div class="grid-3x3" id="grid"></div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <span class="count-label"><span id="countLabel">0</span> / 9 選択済み</span>
+    <span class="count-hint" id="warn"></span>
+  </div>
+  <div class="restore-status" id="restoreStatus"></div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn-action btn-clear" id="clearBtn" disabled>クリア</button>
+    <button class="btn-action btn-copy" id="copyBtn" disabled>リンクをコピー</button>
+    <button class="btn-action btn-open" id="openBtn" disabled>リンクで開く</button>
+    <button class="btn-action btn-save" id="saveImgBtn" disabled>画像で保存</button>
+  </div>
+</main>
+
+<footer>
+  <p class="footer-credit">Created by そういちろう / <a href="https://x.com/black777cat" target="_blank" rel="noopener">@black777cat</a></p>
+  <p class="footer-wishlist"><a href="https://www.amazon.jp/hz/wishlist/ls/1Z0X9ZM1D65A7?ref_=wl_share" target="_blank" rel="noopener">ほしいものリスト</a></p>
+</footer>
+
+<!-- Search Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">カードを検索</span>
+      <button class="modal-close" id="modalClose" aria-label="閉じる">&times;</button>
+    </div>
+    <div class="modal-search">
+      <input type="text" id="searchInput" placeholder="カード名を入力（例: 稲妻、Black Lotus）">
+      <button id="searchBtn">検索</button>
+    </div>
+    <div class="modal-status" id="status"></div>
+    <div class="modal-results" id="results"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
