@@ -263,6 +263,12 @@ main {
 .btn-tweet { color: #000; }
 .btn-tweet:hover:not(:disabled) { background: #f0f0f0; border-color: #999; }
 
+.btn-bsky { color: #0085ff; }
+.btn-bsky:hover:not(:disabled) { background: #eff8ff; border-color: #7ec4ff; }
+
+.btn-reddit { color: #ff4500; }
+.btn-reddit:hover:not(:disabled) { background: #fff5f0; border-color: #ffb89a; }
+
 /* ── Modal ── */
 .modal-overlay {
   display: none;

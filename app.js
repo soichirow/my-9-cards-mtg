@@ -71,6 +71,8 @@
   var clearBtn = document.getElementById("clearBtn");
   var copyBtn = document.getElementById("copyBtn");
   var tweetBtn = document.getElementById("tweetBtn");
+  var bskyBtn = document.getElementById("bskyBtn");
+  var redditBtn = document.getElementById("redditBtn");
   var saveImgBtn = document.getElementById("saveImgBtn");
   var warnEl = document.getElementById("warn");
   var restoreStatusEl = document.getElementById("restoreStatus");
@@ -235,6 +237,8 @@
     clearBtn.disabled = count === 0;
     copyBtn.disabled = count === 0;
     tweetBtn.disabled = count === 0;
+    bskyBtn.disabled = count === 0;
+    redditBtn.disabled = count === 0;
     saveImgBtn.disabled = count === 0;
 
     if (count > 0 && count < MAX_CARDS) {
@@ -827,6 +831,19 @@
     window.open(tweetUrl, "_blank");
   }
 
+  function shareOnBluesky() {
+    var shareUrl = buildShareUrl();
+    var text = T.shareText(shareUrl);
+    var bskyUrl = "https://bsky.app/intent/compose?text=" + encodeURIComponent(text);
+    window.open(bskyUrl, "_blank");
+  }
+
+  function shareOnReddit() {
+    var shareUrl = buildShareUrl();
+    var redditUrl = "https://www.reddit.com/submit?url=" + encodeURIComponent(shareUrl) + "&title=" + encodeURIComponent(T.imageTitle);
+    window.open(redditUrl, "_blank");
+  }
+
   // ════════════════════════════════════════
   //  Save as Image
   // ════════════════════════════════════════
@@ -996,6 +1013,8 @@
   clearBtn.addEventListener("click", clearAll);
   copyBtn.addEventListener("click", copyShareLink);
   tweetBtn.addEventListener("click", shareOnX);
+  bskyBtn.addEventListener("click", shareOnBluesky);
+  redditBtn.addEventListener("click", shareOnReddit);
   saveImgBtn.addEventListener("click", saveAsImage);
 
   // Dismiss active overlays on outside click
