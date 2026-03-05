@@ -726,31 +726,17 @@
   // ════════════════════════════════════════
 
   function loadImage(url) {
+    // wsrv.nl 画像プロキシ経由でCORSを回避
+    var proxyUrl = "https://wsrv.nl/?url=" + encodeURIComponent(url);
     return new Promise(function (resolve) {
       var img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () { resolve(img); };
       img.onerror = function () {
-        console.error("Image load failed:", url);
-        // fallback: fetch → blob → objectURL
-        fetch(url)
-          .then(function (r) { return r.blob(); })
-          .then(function (blob) {
-            var objUrl = URL.createObjectURL(blob);
-            var img2 = new Image();
-            img2.onload = function () {
-              URL.revokeObjectURL(objUrl);
-              resolve(img2);
-            };
-            img2.onerror = function () {
-              URL.revokeObjectURL(objUrl);
-              resolve(null);
-            };
-            img2.src = objUrl;
-          })
-          .catch(function () { resolve(null); });
+        console.error("Image load failed:", proxyUrl);
+        resolve(null);
       };
-      img.src = url;
+      img.src = proxyUrl;
     });
   }
 
