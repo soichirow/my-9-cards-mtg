@@ -744,7 +744,7 @@
 
   function shareOnX() {
     var shareUrl = buildShareUrl();
-    var text = "私を構成する9枚のカード\n#私を構成する9つのカード #9mtgcard\n" + shareUrl;
+    var text = "私を構成する9枚のカード\n#私を構成する9つのカード #My9MTGCards\n" + shareUrl;
     var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(tweetUrl, "_blank");
   }
@@ -860,13 +860,23 @@
         }
       }
 
-      // Download
-      var link = document.createElement("a");
-      link.download = "my-9-cards.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      // Save: Web Share API (スマホ → カメラロール) or download fallback
+      var blob = await new Promise(function (resolve) {
+        canvas.toBlob(function (b) { resolve(b); }, "image/png");
+      });
+      var file = new File([blob], "my-9-cards.png", { type: "image/png" });
 
-      warnEl.textContent = "画像を保存しました！";
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        warnEl.textContent = "共有しました！";
+      } else {
+        var link = document.createElement("a");
+        link.download = "my-9-cards.png";
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        setTimeout(function () { URL.revokeObjectURL(link.href); }, 10000);
+        warnEl.textContent = "画像を保存しました！";
+      }
     } catch (err) {
       warnEl.textContent = "画像の生成に失敗しました: " + err.message;
     } finally {
