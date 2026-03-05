@@ -8,6 +8,7 @@
   // ── State ──
   var selected = new Array(MAX_CARDS).fill(null);
   var activeSlotIndex = -1;
+  var isViewingShared = false; // 共有URLからの閲覧中はlocalStorage保存しない
 
   // URL params を renderGrid→updateUrl が消す前に退避
   var initialSearch = location.search;
@@ -82,7 +83,8 @@
 
   function updateUrl() {
     history.replaceState(null, "", buildShareUrl());
-    // localStorageにも保存
+    // 共有URL閲覧中はlocalStorageを上書きしない
+    if (isViewingShared) return;
     var ids = selected.filter(Boolean).map(function (c) { return c.id; });
     try {
       if (ids.length > 0) {
@@ -670,7 +672,9 @@
     var idsParam = params.get("ids");
     var source = "リンク";
 
-    if (!idsParam) {
+    if (idsParam) {
+      isViewingShared = true;
+    } else {
       try {
         idsParam = localStorage.getItem(STORAGE_KEY);
         source = "前回の作業";
