@@ -860,16 +860,28 @@
         }
       }
 
-      // Save: Web Share API (スマホ → カメラロール) or download fallback
+      // Save: モバイルはWeb Share API、PCはダウンロード
       var blob = await new Promise(function (resolve) {
         canvas.toBlob(function (b) { resolve(b); }, "image/png");
       });
-      var file = new File([blob], "my-9-cards.png", { type: "image/png" });
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        warnEl.textContent = "共有しました！";
-      } else {
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var shared = false;
+
+      if (isMobile && navigator.canShare) {
+        try {
+          var file = new File([blob], "my-9-cards.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+            shared = true;
+            warnEl.textContent = "共有しました！";
+          }
+        } catch (e) {
+          // ユーザーキャンセルなど — ダウンロードにフォールバック
+        }
+      }
+
+      if (!shared) {
         var link = document.createElement("a");
         link.download = "my-9-cards.png";
         link.href = URL.createObjectURL(blob);
