@@ -5,6 +5,57 @@
   var MAX_RESULTS = 30;
   var API_BASE = "https://api.scryfall.com";
 
+  // ── i18n ──
+  var defaultLang = {
+    slotChange: function (n) { return "スロット " + n + " を変更"; },
+    slotAdd: function (n) { return "スロット " + n + " にカードを追加"; },
+    versionsOf: function (name) { return name + " のバージョン"; },
+    loadingVersions: "バージョンを取得中...",
+    fetchError: "取得エラー",
+    versionsCount: function (n) { return n + "件のバージョン"; },
+    networkError: function (msg) { return "通信エラー: " + msg; },
+    canPickMore: function (remaining, count) { return "あと" + remaining + "枚選べます（" + count + "枚でもシェア可能）"; },
+    allSelected: "9枚揃いました！",
+    select: "選択",
+    change: "変更",
+    altVer: "他Ver",
+    remove: "解除",
+    confirmNew: "現在の選択をクリアして新しく作りますか？",
+    confirmClear: "すべてのカードをクリアしますか？",
+    noResults: "検索結果がありません",
+    add: "追加",
+    verOpen: "▲ 他Ver",
+    verClosed: "▼ 他Ver",
+    verLoading: "読込中",
+    verNone: "バージョンなし",
+    enterQuery: "検索クエリを入力してください",
+    searching: "検索中...",
+    showingOf: function (shown, total) { return total + "件中 " + shown + "件を表示"; },
+    showMore: function (shown, total) { return "さらに表示（" + shown + " / " + total + "）"; },
+    loading: "読み込み中...",
+    loadError: "読み込みエラー。タップで再試行",
+    sourceLink: "リンク",
+    sourceLocal: "前回の作業",
+    restoringFrom: function (src) { return src + "からカードを復元中..."; },
+    restoredPartial: function (ok, fail) { return ok + "枚を復元（" + fail + "枚は取得できませんでした）"; },
+    restoredAll: function (n) { return n + "枚を復元しました"; },
+    restoreError: function (msg) { return "復元通信エラー: " + msg; },
+    linkCopied: "リンクをコピーしました！",
+    copyFailed: "コピーに失敗しました。URLを手動でコピーしてください。",
+    shareText: function (url) { return "私を作ったマジック9枚\n#私を作ったマジック9枚 #My9MTGCards\n" + url; },
+    imageTitle: "私を作ったマジック9枚",
+    generating: "生成中...",
+    shared: "共有しました！",
+    imageSaved: "画像を保存しました！",
+    imageError: function (msg) { return "画像の生成に失敗しました: " + msg; },
+    saveAsImage: "画像で保存",
+    searchError: function (msg) { return "検索エラー: " + msg; },
+    selectedLabel: "選択済み",
+    langFilterLabel: "日本語・英語以外のカードも表示"
+  };
+
+  var T = (typeof window.SITE_LANG === "object") ? window.SITE_LANG : defaultLang;
+
   // ── State ──
   var selected = new Array(MAX_CARDS).fill(null);
   var activeSlotIndex = -1;
@@ -109,9 +160,9 @@
     activeSlotIndex = index;
     var card = selected[index];
     if (card) {
-      modalTitle.textContent = "スロット " + (index + 1) + " を変更";
+      modalTitle.textContent = T.slotChange(index + 1);
     } else {
-      modalTitle.textContent = "スロット " + (index + 1) + " にカードを追加";
+      modalTitle.textContent = T.slotAdd(index + 1);
     }
     modalOverlay.classList.add("open");
     searchInput.value = "";
@@ -130,16 +181,16 @@
     if (!card || !card.prints_search_uri) return;
 
     activeSlotIndex = index;
-    modalTitle.textContent = getDisplayName(card) + " のバージョン";
+    modalTitle.textContent = T.versionsOf(getDisplayName(card));
     modalOverlay.classList.add("open");
     searchInput.value = "";
     statusEl.textContent = "";
-    resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>バージョンを取得中...</div>';
+    resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>' + T.loadingVersions + '</div>';
 
     try {
       var resp = await fetch(card.prints_search_uri + "&include_multilingual=true");
       if (!resp.ok) {
-        setStatus("取得エラー", true);
+        setStatus(T.fetchError, true);
         resultsEl.innerHTML = "";
         return;
       }
@@ -148,10 +199,10 @@
       if (!allLangCheck.checked) {
         versions = versions.filter(function (v) { return v.lang === "ja" || v.lang === "en"; });
       }
-      setStatus(versions.length + "件のバージョン");
+      setStatus(T.versionsCount(versions.length));
       renderResults(versions);
     } catch (err) {
-      setStatus("通信エラー: " + err.message, true);
+      setStatus(T.networkError(err.message), true);
       resultsEl.innerHTML = "";
     }
   }
@@ -187,9 +238,9 @@
     saveImgBtn.disabled = count === 0;
 
     if (count > 0 && count < MAX_CARDS) {
-      warnEl.textContent = "あと" + (MAX_CARDS - count) + "枚選べます（" + count + "枚でもシェア可能）";
+      warnEl.textContent = T.canPickMore(MAX_CARDS - count, count);
     } else if (count === MAX_CARDS) {
-      warnEl.textContent = "9枚揃いました！";
+      warnEl.textContent = T.allSelected;
     } else {
       warnEl.textContent = "";
     }
@@ -207,7 +258,7 @@
 
     var label = document.createElement("span");
     label.className = "slot-label";
-    label.textContent = "選択";
+    label.textContent = T.select;
     slot.appendChild(label);
 
     slot.addEventListener("click", function () {
@@ -248,7 +299,7 @@
 
     var changeBtn = document.createElement("button");
     changeBtn.className = "card-hover-btn change";
-    changeBtn.textContent = "変更";
+    changeBtn.textContent = T.change;
     changeBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       openModal(index);
@@ -256,7 +307,7 @@
 
     var verBtn = document.createElement("button");
     verBtn.className = "card-hover-btn version";
-    verBtn.textContent = "他Ver";
+    verBtn.textContent = T.altVer;
     verBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       openVersionModal(index);
@@ -264,7 +315,7 @@
 
     var removeBtn = document.createElement("button");
     removeBtn.className = "card-hover-btn remove";
-    removeBtn.textContent = "解除";
+    removeBtn.textContent = T.remove;
     removeBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       removeCard(index);
@@ -435,7 +486,7 @@
   }
 
   function createNew() {
-    if (filledCount() > 0 && !confirm("現在の選択をクリアして新しく作りますか？")) return;
+    if (filledCount() > 0 && !confirm(T.confirmNew)) return;
     selected = new Array(MAX_CARDS).fill(null);
     isViewingShared = false;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* */ }
@@ -445,7 +496,7 @@
   }
 
   function clearAll() {
-    if (!confirm("すべてのカードをクリアしますか？")) return;
+    if (!confirm(T.confirmClear)) return;
     selected = new Array(MAX_CARDS).fill(null);
     isViewingShared = false;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* */ }
@@ -459,7 +510,7 @@
   function renderResults(cards, clearFirst) {
     if (clearFirst !== false) resultsEl.innerHTML = "";
     if (cards.length === 0 && currentShownCards === 0) {
-      setStatus("検索結果がありません");
+      setStatus(T.noResults);
       return;
     }
 
@@ -507,7 +558,7 @@
 
       var addBtn = document.createElement("button");
       addBtn.className = "result-add-btn";
-      addBtn.textContent = "追加";
+      addBtn.textContent = T.add;
       (function (c) {
         addBtn.addEventListener("click", function (e) {
           e.stopPropagation();
@@ -530,7 +581,7 @@
   function createVersionButton(card, parentEl) {
     var verBtn = document.createElement("button");
     verBtn.className = "result-ver-btn";
-    verBtn.textContent = "▼ 他Ver";
+    verBtn.textContent = T.verClosed;
 
     var versionsRow = null;
 
@@ -540,7 +591,7 @@
       if (versionsRow) {
         var visible = versionsRow.style.display !== "none";
         versionsRow.style.display = visible ? "none" : "flex";
-        verBtn.textContent = visible ? "▼ 他Ver" : "▲ 他Ver";
+        verBtn.textContent = visible ? T.verClosed : T.verOpen;
         verBtn.classList.toggle("open", !visible);
         return;
       }
@@ -548,10 +599,10 @@
       // Create row and fetch
       versionsRow = document.createElement("div");
       versionsRow.className = "versions-row";
-      versionsRow.innerHTML = '<div class="ver-loading"><span class="spinner"></span>読込中</div>';
+      versionsRow.innerHTML = '<div class="ver-loading"><span class="spinner"></span>' + T.verLoading + '</div>';
       // Insert after the result-card
       parentEl.parentNode.insertBefore(versionsRow, parentEl.nextSibling);
-      verBtn.textContent = "▲ 他Ver";
+      verBtn.textContent = T.verOpen;
       verBtn.classList.add("open");
 
       fetch(card.prints_search_uri + "&include_multilingual=true")
@@ -563,7 +614,7 @@
             vers = vers.filter(function (v) { return v.lang === "ja" || v.lang === "en"; });
           }
           if (vers.length === 0) {
-            versionsRow.innerHTML = '<div class="ver-loading">バージョンなし</div>';
+            versionsRow.innerHTML = '<div class="ver-loading">' + T.verNone + '</div>';
             return;
           }
           vers.forEach(function (ver) {
@@ -571,7 +622,7 @@
           });
         })
         .catch(function () {
-          versionsRow.innerHTML = '<div class="ver-loading">取得エラー</div>';
+          versionsRow.innerHTML = '<div class="ver-loading">' + T.fetchError + '</div>';
         });
     });
 
@@ -606,11 +657,11 @@
 
   async function doSearch() {
     var query = searchInput.value.trim();
-    if (!query) { setStatus("検索クエリを入力してください"); return; }
+    if (!query) { setStatus(T.enterQuery); return; }
 
     searchBtn.disabled = true;
-    setStatus("検索中...");
-    resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>検索中...</div>';
+    setStatus(T.searching);
+    resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>' + T.searching + '</div>';
     currentTotalCards = 0;
     currentShownCards = 0;
 
@@ -619,7 +670,7 @@
       var url = API_BASE + "/cards/search?q=" + encodeURIComponent(fullQuery) + "&include_multilingual=true";
       await fetchAndAppendResults(url, true);
     } catch (err) {
-      setStatus("通信エラー: " + err.message, true);
+      setStatus(T.networkError(err.message), true);
       resultsEl.innerHTML = "";
     } finally {
       searchBtn.disabled = false;
@@ -628,7 +679,7 @@
 
   async function fetchAndAppendResults(url, isFirstPage) {
     if (isFirstPage) {
-      resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>検索中...</div>';
+      resultsEl.innerHTML = '<div class="loading"><span class="spinner"></span>' + T.searching + '</div>';
     }
 
     var resp = await fetch(url);
@@ -636,7 +687,7 @@
       var errBody = null;
       try { errBody = await resp.json(); } catch (e) { /* ignore */ }
       var errMsg = (errBody && errBody.details) ? errBody.details : "HTTP " + resp.status;
-      setStatus("検索エラー: " + errMsg, true);
+      setStatus(T.searchError(errMsg), true);
       if (isFirstPage) resultsEl.innerHTML = "";
       return;
     }
@@ -655,22 +706,22 @@
     if (existingMore) existingMore.remove();
 
     currentShownCards += cards.length;
-    setStatus(currentTotalCards + "件中 " + currentShownCards + "件を表示");
+    setStatus(T.showingOf(currentShownCards, currentTotalCards));
     renderResults(cards, false);
 
     // Add "load more" button if there are more pages
     if (data.has_more && data.next_page) {
       var moreBtn = document.createElement("button");
       moreBtn.className = "load-more-btn";
-      moreBtn.textContent = "さらに表示（" + currentShownCards + " / " + currentTotalCards + "）";
+      moreBtn.textContent = T.showMore(currentShownCards, currentTotalCards);
       (function (nextUrl) {
         moreBtn.addEventListener("click", async function () {
           moreBtn.disabled = true;
-          moreBtn.textContent = "読み込み中...";
+          moreBtn.textContent = T.loading;
           try {
             await fetchAndAppendResults(nextUrl, false);
           } catch (err) {
-            moreBtn.textContent = "読み込みエラー。タップで再試行";
+            moreBtn.textContent = T.loadError;
             moreBtn.disabled = false;
           }
         });
@@ -697,14 +748,14 @@
     var params = new URLSearchParams(initialSearch);
     // 新形式 ?c= 優先、旧形式 ?ids= にも対応
     var codesParam = params.get("c") || params.get("ids");
-    var source = "リンク";
+    var source = T.sourceLink;
 
     if (codesParam) {
       isViewingShared = true;
     } else {
       try {
         codesParam = localStorage.getItem(STORAGE_KEY);
-        source = "前回の作業";
+        source = T.sourceLocal;
       } catch (e) { /* storage unavailable */ }
     }
     if (!codesParam) return;
@@ -712,7 +763,7 @@
     var codes = codesParam.split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, MAX_CARDS);
     if (codes.length === 0) return;
 
-    setRestoreStatus(source + "からカードを復元中...");
+    setRestoreStatus(T.restoringFrom(source));
 
     try {
       var promises = codes.map(function (code) {
@@ -735,12 +786,12 @@
 
       var restored = filledCount();
       if (notFound > 0) {
-        setRestoreStatus(restored + "枚を復元（" + notFound + "枚は取得できませんでした）", true);
+        setRestoreStatus(T.restoredPartial(restored, notFound), true);
       } else {
-        setRestoreStatus(restored + "枚を復元しました");
+        setRestoreStatus(T.restoredAll(restored));
       }
     } catch (err) {
-      setRestoreStatus("復元通信エラー: " + err.message, true);
+      setRestoreStatus(T.restoreError(err.message), true);
     }
   }
 
@@ -752,7 +803,7 @@
     var url = buildShareUrl();
     try {
       await navigator.clipboard.writeText(url);
-      warnEl.textContent = "リンクをコピーしました！";
+      warnEl.textContent = T.linkCopied;
     } catch (e) {
       try {
         var ta = document.createElement("textarea");
@@ -762,16 +813,16 @@
         ta.select();
         document.execCommand("copy");
         document.body.removeChild(ta);
-        warnEl.textContent = "リンクをコピーしました！";
+        warnEl.textContent = T.linkCopied;
       } catch (e2) {
-        warnEl.textContent = "コピーに失敗しました。URLを手動でコピーしてください。";
+        warnEl.textContent = T.copyFailed;
       }
     }
   }
 
   function shareOnX() {
     var shareUrl = buildShareUrl();
-    var text = "私を作ったマジック9枚\n#私を作ったマジック9枚 #My9MTGCards\n" + shareUrl;
+    var text = T.shareText(shareUrl);
     var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(tweetUrl, "_blank");
   }
@@ -799,7 +850,7 @@
     if (filledCount() === 0) return;
 
     saveImgBtn.disabled = true;
-    saveImgBtn.textContent = "生成中...";
+    saveImgBtn.textContent = T.generating;
 
     try {
       var CARD_W = 200;
@@ -830,7 +881,7 @@
       ctx.fillStyle = "#1e293b";
       ctx.font = "bold 16px 'Noto Sans JP', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("私を作ったマジック9枚", canvasW / 2, PADDING + 18);
+      ctx.fillText(T.imageTitle, canvasW / 2, PADDING + 18);
 
       // Load and draw card images
       var imagePromises = selected.map(function (card, idx) {
@@ -901,7 +952,7 @@
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file] });
             shared = true;
-            warnEl.textContent = "共有しました！";
+            warnEl.textContent = T.shared;
           }
         } catch (e) {
           // ユーザーキャンセルなど — ダウンロードにフォールバック
@@ -914,13 +965,13 @@
         link.href = URL.createObjectURL(blob);
         link.click();
         setTimeout(function () { URL.revokeObjectURL(link.href); }, 10000);
-        warnEl.textContent = "画像を保存しました！";
+        warnEl.textContent = T.imageSaved;
       }
     } catch (err) {
-      warnEl.textContent = "画像の生成に失敗しました: " + err.message;
+      warnEl.textContent = T.imageError(err.message);
     } finally {
       saveImgBtn.disabled = false;
-      saveImgBtn.textContent = "画像で保存";
+      saveImgBtn.textContent = T.saveAsImage;
     }
   }
 

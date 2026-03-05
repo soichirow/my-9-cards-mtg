@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The 9 MTG Cards That Made Me</title>
+<meta name="description" content="Pick MTG cards and share the 9 that represent you">
+<meta property="og:title" content="The 9 MTG Cards That Made Me">
+<meta property="og:description" content="Pick MTG cards and share the 9 that represent you">
+<meta property="og:url" content="https://soichirow.github.io/my-9-cards-mtg/en.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The 9 MTG Cards That Made Me">
+<meta name="twitter:description" content="Pick MTG cards and share the 9 that represent you">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="lang-switch"><a href="index.html">日本語</a></div>
+  <h1>The 9 MTG Cards That Made Me</h1>
+  <p class="subtitle">Pick MTG cards and share the 9 that represent you</p>
+</header>
+
+<main>
+  <!-- 3×3 Grid -->
+  <div class="grid-3x3" id="grid"></div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <span class="count-label"><span id="countLabel">0</span> / 9 selected</span>
+    <span class="count-hint" id="warn"></span>
+  </div>
+  <div class="restore-status" id="restoreStatus"></div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn-action btn-new" id="newBtn">New</button>
+    <button class="btn-action btn-clear" id="clearBtn" disabled>Clear</button>
+    <button class="btn-action btn-copy" id="copyBtn" disabled>Copy Link</button>
+    <button class="btn-action btn-save" id="saveImgBtn" disabled>Save as Image</button>
+    <button class="btn-action btn-tweet" id="tweetBtn" disabled>Share on X</button>
+  </div>
+</main>
+
+<footer>
+  <div class="kofi-wrap"><a href='https://ko-fi.com/P5P11VGFXY' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a></div>
+  <p class="footer-credit">Created by Soichiro / <a href="https://x.com/black777cat" target="_blank" rel="noopener">@black777cat</a></p>
+  <p class="footer-links"><a href="https://note.com/black777cat" target="_blank" rel="noopener">note</a> / <a href="https://script.google.com/macros/s/AKfycbyzDxiyZ-O987clfo7qRDG-I4-x1b4MiOTFCQrvvbTUiUxPPww0kgbHaYAKrTQouCnp/exec" target="_blank" rel="noopener">EDH Card Image List</a> / <a href="https://www.amazon.jp/hz/wishlist/ls/1Z0X9ZM1D65A7?ref_=wl_share" target="_blank" rel="noopener">Wishlist</a></p>
+  <p class="footer-legal">Card data &amp; images from <a href="https://scryfall.com/" target="_blank" rel="noopener">Scryfall</a>. This site is unofficial Fan Content permitted under the <a href="https://company.wizards.com/en/legal/fancontentpolicy" target="_blank" rel="noopener">Fan Content Policy</a>. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. &copy;Wizards of the Coast LLC.</p>
+</footer>
+
+<!-- Search Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Search Cards</span>
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-search">
+      <input type="text" id="searchInput" placeholder="Enter card name (e.g. Lightning Bolt, Black Lotus)">
+      <button id="searchBtn">Search</button>
+    </div>
+    <div class="modal-options">
+      <label class="option-label"><input type="checkbox" id="allLangCheck"> Show cards in other languages</label>
+    </div>
+    <div class="modal-status" id="status"></div>
+    <div class="modal-results" id="results"></div>
+  </div>
+</div>
+
+<script>
+window.SITE_LANG = {
+  slotChange: function (n) { return "Change slot " + n; },
+  slotAdd: function (n) { return "Add card to slot " + n; },
+  versionsOf: function (name) { return name + " — Versions"; },
+  loadingVersions: "Loading versions...",
+  fetchError: "Fetch error",
+  versionsCount: function (n) { return n + " versions"; },
+  networkError: function (msg) { return "Network error: " + msg; },
+  canPickMore: function (remaining, count) { return remaining + " more to go (shareable with " + count + ")"; },
+  allSelected: "All 9 selected!",
+  select: "Select",
+  change: "Change",
+  altVer: "Versions",
+  remove: "Remove",
+  confirmNew: "Clear current selection and start fresh?",
+  confirmClear: "Clear all cards?",
+  noResults: "No results found",
+  add: "Add",
+  verOpen: "\u25b2 Versions",
+  verClosed: "\u25bc Versions",
+  verLoading: "Loading",
+  verNone: "No versions",
+  enterQuery: "Enter a search query",
+  searching: "Searching...",
+  showingOf: function (shown, total) { return "Showing " + shown + " of " + total; },
+  showMore: function (shown, total) { return "Show more (" + shown + " / " + total + ")"; },
+  loading: "Loading...",
+  loadError: "Load error. Tap to retry",
+  sourceLink: "link",
+  sourceLocal: "last session",
+  restoringFrom: function (src) { return "Restoring cards from " + src + "..."; },
+  restoredPartial: function (ok, fail) { return "Restored " + ok + " cards (" + fail + " could not be loaded)"; },
+  restoredAll: function (n) { return "Restored " + n + " cards"; },
+  restoreError: function (msg) { return "Restore error: " + msg; },
+  linkCopied: "Link copied!",
+  copyFailed: "Copy failed. Please copy the URL manually.",
+  shareText: function (url) { return "The 9 MTG Cards That Made Me\n#My9MTGCards #私を作ったマジック9枚\n" + url; },
+  imageTitle: "The 9 MTG Cards That Made Me",
+  generating: "Generating...",
+  shared: "Shared!",
+  imageSaved: "Image saved!",
+  imageError: function (msg) { return "Failed to generate image: " + msg; },
+  saveAsImage: "Save as Image",
+  searchError: function (msg) { return "Search error: " + msg; },
+  selectedLabel: "selected",
+  langFilterLabel: "Show cards in other languages"
+};
+</script>
+<script src="app.js"></script>
+</body>
+</html>
