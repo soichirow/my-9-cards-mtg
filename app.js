@@ -70,11 +70,16 @@
   //  URL / Share
   // ════════════════════════════════════════
 
+  // カードを "set:collector_number:lang" 形式でエンコード
+  function encodeCard(card) {
+    return card.set + ":" + card.collector_number + ":" + card.lang;
+  }
+
   function buildShareUrl() {
     var url = new URL(location.href.split("?")[0]);
-    var ids = selected.filter(Boolean).map(function (c) { return c.id; });
-    if (ids.length > 0) {
-      url.searchParams.set("ids", ids.join(","));
+    var codes = selected.filter(Boolean).map(encodeCard);
+    if (codes.length > 0) {
+      url.searchParams.set("c", codes.join(","));
     }
     return url.toString();
   }
@@ -85,10 +90,10 @@
     history.replaceState(null, "", buildShareUrl());
     // 共有URL閲覧中はlocalStorageを上書きしない
     if (isViewingShared) return;
-    var ids = selected.filter(Boolean).map(function (c) { return c.id; });
+    var codes = selected.filter(Boolean).map(encodeCard);
     try {
-      if (ids.length > 0) {
-        localStorage.setItem(STORAGE_KEY, ids.join(","));
+      if (codes.length > 0) {
+        localStorage.setItem(STORAGE_KEY, codes.join(","));
       } else {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -666,30 +671,40 @@
   //  Restore from URL
   // ════════════════════════════════════════
 
+  // "set:number:lang" → API URL
+  function cardCodeToUrl(code) {
+    var parts = code.split(":");
+    if (parts.length === 3) {
+      return API_BASE + "/cards/" + encodeURIComponent(parts[0]) + "/" + encodeURIComponent(parts[1]) + "/" + encodeURIComponent(parts[2]);
+    }
+    // 旧形式(UUID)フォールバック
+    return API_BASE + "/cards/" + encodeURIComponent(code);
+  }
+
   async function restoreCards() {
-    // URLパラメータ優先、なければlocalStorageから復元
     var params = new URLSearchParams(initialSearch);
-    var idsParam = params.get("ids");
+    // 新形式 ?c= 優先、旧形式 ?ids= にも対応
+    var codesParam = params.get("c") || params.get("ids");
     var source = "リンク";
 
-    if (idsParam) {
+    if (codesParam) {
       isViewingShared = true;
     } else {
       try {
-        idsParam = localStorage.getItem(STORAGE_KEY);
+        codesParam = localStorage.getItem(STORAGE_KEY);
         source = "前回の作業";
       } catch (e) { /* storage unavailable */ }
     }
-    if (!idsParam) return;
+    if (!codesParam) return;
 
-    var ids = idsParam.split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, MAX_CARDS);
-    if (ids.length === 0) return;
+    var codes = codesParam.split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, MAX_CARDS);
+    if (codes.length === 0) return;
 
     setRestoreStatus(source + "からカードを復元中...");
 
     try {
-      var promises = ids.map(function (id) {
-        return fetch(API_BASE + "/cards/" + encodeURIComponent(id))
+      var promises = codes.map(function (code) {
+        return fetch(cardCodeToUrl(code))
           .then(function (resp) { return resp.ok ? resp.json() : null; })
           .catch(function () { return null; });
       });
