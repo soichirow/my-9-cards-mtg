@@ -771,7 +771,7 @@
 
   function shareOnX() {
     var shareUrl = buildShareUrl();
-    var text = "私を構成する9枚のカード\n#私を作ったマジック9枚 #My9MTGCards\n" + shareUrl;
+    var text = "私を作ったマジック9枚\n#私を作ったマジック9枚 #My9MTGCards\n" + shareUrl;
     var tweetUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(text);
     window.open(tweetUrl, "_blank");
   }
@@ -830,7 +830,7 @@
       ctx.fillStyle = "#1e293b";
       ctx.font = "bold 16px 'Noto Sans JP', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("私を構成する9枚のカード", canvasW / 2, PADDING + 18);
+      ctx.fillText("私を作ったマジック9枚", canvasW / 2, PADDING + 18);
 
       // Load and draw card images
       var imagePromises = selected.map(function (card, idx) {
