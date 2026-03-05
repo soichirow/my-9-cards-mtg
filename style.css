@@ -581,31 +581,26 @@ footer {
 }
 
 .footer-credit {
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: 0.7rem;
+  color: #b0bec5;
 }
 
 .footer-credit a {
-  color: #64748b;
+  color: #b0bec5;
   text-decoration: none;
 }
 
-.footer-wishlist {
-  margin-top: 4px;
-  font-size: 0.7rem;
+.footer-links {
+  margin-top: 2px;
+  font-size: 0.6rem;
 }
 
-.footer-wishlist a {
-  color: #94a3b8;
+.footer-links a {
+  color: #c0c8d0;
   text-decoration: none;
 }
 
-.footer-wishlist a:hover {
-  color: #3b82f6;
-  text-decoration: underline;
-}
-
-.footer-credit a:hover {
+.footer-links a:hover, .footer-credit a:hover {
   color: #3b82f6;
   text-decoration: underline;
 }
