@@ -27,6 +27,7 @@
   var modalClose = document.getElementById("modalClose");
   var searchInput = document.getElementById("searchInput");
   var searchBtn = document.getElementById("searchBtn");
+  var allLangCheck = document.getElementById("allLangCheck");
   var statusEl = document.getElementById("status");
   var resultsEl = document.getElementById("results");
 
@@ -576,7 +577,8 @@
     currentShownCards = 0;
 
     try {
-      var url = API_BASE + "/cards/search?q=" + encodeURIComponent(query) + "&include_multilingual=true";
+      var fullQuery = allLangCheck.checked ? query : "(lang:ja OR lang:en) " + query;
+      var url = API_BASE + "/cards/search?q=" + encodeURIComponent(fullQuery) + "&include_multilingual=true";
       await fetchAndAppendResults(url, true);
     } catch (err) {
       setStatus("通信エラー: " + err.message, true);

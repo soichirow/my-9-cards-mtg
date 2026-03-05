@@ -335,6 +335,25 @@ main {
 .modal-search button:hover { background: #2563eb; }
 .modal-search button:disabled { background: #cbd5e1; cursor: not-allowed; }
 
+.modal-options {
+  padding: 2px 20px 6px;
+}
+.option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+}
+.option-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
 .modal-status {
   padding: 0 20px;
   font-size: 0.8rem;
