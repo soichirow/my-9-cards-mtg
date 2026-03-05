@@ -126,6 +126,9 @@
       }
       var data = await resp.json();
       var versions = data.data || [];
+      if (!allLangCheck.checked) {
+        versions = versions.filter(function (v) { return v.lang === "ja" || v.lang === "en"; });
+      }
       setStatus(versions.length + "件のバージョン");
       renderResults(versions);
     } catch (err) {
@@ -524,11 +527,15 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           versionsRow.innerHTML = "";
-          if (!data || !data.data || data.data.length === 0) {
+          var vers = (data && data.data) ? data.data : [];
+          if (!allLangCheck.checked) {
+            vers = vers.filter(function (v) { return v.lang === "ja" || v.lang === "en"; });
+          }
+          if (vers.length === 0) {
             versionsRow.innerHTML = '<div class="ver-loading">バージョンなし</div>';
             return;
           }
-          data.data.forEach(function (ver) {
+          vers.forEach(function (ver) {
             versionsRow.appendChild(createVersionItem(ver));
           });
         })
