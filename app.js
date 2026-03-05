@@ -78,8 +78,19 @@
     return url.toString();
   }
 
+  var STORAGE_KEY = "my9cards_ids";
+
   function updateUrl() {
     history.replaceState(null, "", buildShareUrl());
+    // localStorageにも保存
+    var ids = selected.filter(Boolean).map(function (c) { return c.id; });
+    try {
+      if (ids.length > 0) {
+        localStorage.setItem(STORAGE_KEY, ids.join(","));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (e) { /* storage unavailable */ }
   }
 
   // ════════════════════════════════════════
@@ -418,6 +429,7 @@
   function clearAll() {
     if (!confirm("すべてのカードをクリアしますか？")) return;
     selected = new Array(MAX_CARDS).fill(null);
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* */ }
     renderGrid();
   }
 
@@ -652,15 +664,24 @@
   //  Restore from URL
   // ════════════════════════════════════════
 
-  async function restoreFromUrl() {
+  async function restoreCards() {
+    // URLパラメータ優先、なければlocalStorageから復元
     var params = new URLSearchParams(initialSearch);
     var idsParam = params.get("ids");
+    var source = "リンク";
+
+    if (!idsParam) {
+      try {
+        idsParam = localStorage.getItem(STORAGE_KEY);
+        source = "前回の作業";
+      } catch (e) { /* storage unavailable */ }
+    }
     if (!idsParam) return;
 
     var ids = idsParam.split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, MAX_CARDS);
     if (ids.length === 0) return;
 
-    setRestoreStatus("リンクからカードを復元中...");
+    setRestoreStatus(source + "からカードを復元中...");
 
     try {
       var promises = ids.map(function (id) {
@@ -899,5 +920,5 @@
 
   // Init
   renderGrid();
-  restoreFromUrl();
+  restoreCards();
 })();
