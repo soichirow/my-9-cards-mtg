@@ -16,6 +16,7 @@
   // ── DOM refs ──
   var gridEl = document.getElementById("grid");
   var countLabel = document.getElementById("countLabel");
+  var newBtn = document.getElementById("newBtn");
   var clearBtn = document.getElementById("clearBtn");
   var copyBtn = document.getElementById("copyBtn");
   var tweetBtn = document.getElementById("tweetBtn");
@@ -433,9 +434,20 @@
     renderGrid();
   }
 
+  function createNew() {
+    if (filledCount() > 0 && !confirm("現在の選択をクリアして新しく作りますか？")) return;
+    selected = new Array(MAX_CARDS).fill(null);
+    isViewingShared = false;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* */ }
+    renderGrid();
+    warnEl.textContent = "";
+    restoreStatusEl.textContent = "";
+  }
+
   function clearAll() {
     if (!confirm("すべてのカードをクリアしますか？")) return;
     selected = new Array(MAX_CARDS).fill(null);
+    isViewingShared = false;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* */ }
     renderGrid();
   }
@@ -929,6 +941,7 @@
   });
 
   // Actions
+  newBtn.addEventListener("click", createNew);
   clearBtn.addEventListener("click", clearAll);
   copyBtn.addEventListener("click", copyShareLink);
   tweetBtn.addEventListener("click", shareOnX);
