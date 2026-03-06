@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>OG Image Generator</title></head>
+<body>
+<canvas id="c" width="1200" height="630"></canvas>
+<script>
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+
+// Background gradient
+var bg = ctx.createLinearGradient(0, 0, 1200, 630);
+bg.addColorStop(0, "#0f172a");
+bg.addColorStop(1, "#1e293b");
+ctx.fillStyle = bg;
+ctx.fillRect(0, 0, 1200, 630);
+
+// Subtle grid lines
+ctx.globalAlpha = 0.03;
+ctx.strokeStyle = "white";
+ctx.lineWidth = 1;
+[400, 800].forEach(function(x) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,630); ctx.stroke(); });
+[210, 420].forEach(function(y) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1200,y); ctx.stroke(); });
+ctx.globalAlpha = 1;
+
+// 3x3 Card Grid
+var ox = 120, oy = 140;
+var cw = 80, ch = 112, gap = 10;
+var accents = [[2,0],[1,1],[0,2]]; // highlighted cards
+var accentColors = ["#6366f1", "#f59e0b", "#6366f1"];
+
+for (var row = 0; row < 3; row++) {
+  for (var col = 0; col < 3; col++) {
+    var x = ox + col * (cw + gap);
+    var y = oy + row * (ch + gap);
+
+    // Card background
+    var cf = ctx.createLinearGradient(x, y, x + cw, y + ch);
+    cf.addColorStop(0, "#334155");
+    cf.addColorStop(1, "#1e293b");
+    ctx.fillStyle = cf;
+    roundRect(ctx, x, y, cw, ch, 6);
+    ctx.fill();
+
+    // Border
+    var isAccent = accents.some(function(a) { return a[0] === col && a[1] === row; });
+    ctx.strokeStyle = isAccent ? accentColors[accents.findIndex(function(a) { return a[0] === col && a[1] === row; })] : "#475569";
+    ctx.lineWidth = isAccent ? 2 : 1.5;
+    roundRect(ctx, x, y, cw, ch, 6);
+    ctx.stroke();
+
+    // Inner art box
+    var boxColor = "#1e293b";
+    var boxAlpha = 0.6;
+    if (col === 1 && row === 1) { boxColor = "#f59e0b"; boxAlpha = 0.15; }
+    if (col === 0 && row === 2) { boxColor = "#6366f1"; boxAlpha = 0.15; }
+    ctx.globalAlpha = boxAlpha;
+    ctx.fillStyle = boxColor;
+    roundRect(ctx, x + 8, y + 8, cw - 16, 40, 3);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Glow for accent cards
+    if (isAccent) {
+      ctx.globalAlpha = 0.3;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.shadowBlur = 12;
+      roundRect(ctx, x, y, cw, ch, 6);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+// "My" text
+ctx.font = "800 90px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+ctx.fillStyle = "#e2e8f0";
+ctx.textBaseline = "alphabetic";
+ctx.fillText("My", 500, 280);
+
+// "9" with gradient
+var mw = ctx.measureText("My").width;
+ctx.font = "900 110px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+var nineGrad = ctx.createLinearGradient(500 + mw + 10, 0, 500 + mw + 80, 0);
+nineGrad.addColorStop(0, "#6366f1");
+nineGrad.addColorStop(0.5, "#8b5cf6");
+nineGrad.addColorStop(1, "#a78bfa");
+ctx.fillStyle = nineGrad;
+ctx.fillText("9", 500 + mw + 10, 280);
+
+// "MTG"
+var nw = ctx.measureText("9").width;
+ctx.font = "800 90px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+ctx.fillStyle = "#e2e8f0";
+ctx.fillText("MTG", 500 + mw + nw + 20, 280);
+
+// "Cards"
+ctx.font = "300 80px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+ctx.fillStyle = "#94a3b8";
+ctx.letterSpacing = "8px";
+ctx.fillText("Cards", 500, 360);
+
+// Decorative line
+var lineGrad = ctx.createLinearGradient(500, 0, 700, 0);
+lineGrad.addColorStop(0, "#6366f1");
+lineGrad.addColorStop(0.5, "#8b5cf6");
+lineGrad.addColorStop(1, "#a78bfa");
+ctx.fillStyle = lineGrad;
+roundRect(ctx, 500, 440, 200, 3, 1.5);
+ctx.fill();
+
+// Tagline
+ctx.font = "400 22px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+ctx.fillStyle = "#64748b";
+ctx.textAlign = "center";
+ctx.fillText("Pick your cards. Share your story.", 600, 540);
+ctx.textAlign = "start";
+
+// Download
+setTimeout(function() {
+  var link = document.createElement("a");
+  link.download = "og-image.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  document.body.innerHTML = "<h2 style='color:#fff;font-family:sans-serif;padding:40px;'>og-image.png downloaded!</h2>" + "<img src='" + canvas.toDataURL("image/png") + "' style='max-width:100%;border:1px solid #333;'>";
+  document.body.style.background = "#111";
+}, 500);
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+</script>
+</body>
+</html>

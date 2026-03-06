@@ -68,12 +68,13 @@
       return getDisplayName(card);
     });
     var lang = (document.documentElement.lang === "en") ? "en" : "ja";
+    var url = buildShareUrl();
     var key = platform + "|" + lang + "|" + cards.join(",");
     var now = Date.now();
     if (key === lastLogKey && now - lastLogTime < LOG_DEDUP_MS) return;
     lastLogKey = key;
     lastLogTime = now;
-    var body = JSON.stringify({ lang: lang, platform: platform, cards: cards });
+    var body = JSON.stringify({ lang: lang, platform: platform, cards: cards, url: url });
     try {
       fetch(GAS_ENDPOINT, {
         method: "POST",

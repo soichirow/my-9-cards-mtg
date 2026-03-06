@@ -22,7 +22,7 @@ function doPost(e) {
 
     // ヘッダーがなければ作成
     if (sheet.getLastRow() === 0) {
-      var header = ["日時", "言語", "プラットフォーム", "カード名"];
+      var header = ["日時", "言語", "プラットフォーム", "URL", "カード名"];
       for (var h = 1; h <= 9; h++) header.push("カード" + h);
       sheet.appendRow(header);
     }
@@ -30,10 +30,11 @@ function doPost(e) {
     var timestamp = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd HH:mm:ss");
     var lang = data.lang || "unknown";
     var platform = data.platform || "unknown";
+    var url = data.url || "";
     var cards = data.cards || [];
     var cardsSummary = cards.join(", ");
 
-    var row = [timestamp, lang, platform, cardsSummary];
+    var row = [timestamp, lang, platform, url, cardsSummary];
     for (var i = 0; i < 9; i++) {
       row.push(cards[i] || "");
     }
