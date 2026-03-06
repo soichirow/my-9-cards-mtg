@@ -58,6 +58,9 @@
 
   // ── Share Log ──
   var GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxgt89hM12PZMQRsIzySr_FpQ16DIo0PAz69256fZQZKy_kHaqlOCCf8kVlY1FAqsxiEw/exec";
+  var lastLogKey = "";
+  var lastLogTime = 0;
+  var LOG_DEDUP_MS = 10000; // 同一内容は10秒以内に再送しない
 
   function logShare(platform) {
     if (!GAS_ENDPOINT) return;
@@ -65,6 +68,11 @@
       return getDisplayName(card);
     });
     var lang = (document.documentElement.lang === "en") ? "en" : "ja";
+    var key = platform + "|" + lang + "|" + cards.join(",");
+    var now = Date.now();
+    if (key === lastLogKey && now - lastLogTime < LOG_DEDUP_MS) return;
+    lastLogKey = key;
+    lastLogTime = now;
     var body = JSON.stringify({ lang: lang, platform: platform, cards: cards });
     try {
       fetch(GAS_ENDPOINT, {
@@ -886,6 +894,98 @@
     });
   }
 
+  // 共通: カード画像を生成して Blob を返す
+  async function generateCardBlob() {
+    var CARD_W = 200;
+    var CARD_H = 279;
+    var GAP = 8;
+    var COLS = 3;
+    var PADDING = 20;
+    var HEADER_H = 44;
+    var FOOTER_H = 12;
+
+    var gridW = COLS * CARD_W + (COLS - 1) * GAP;
+    var rows = 3;
+    var gridH = rows * CARD_H + (rows - 1) * GAP;
+
+    var canvasW = gridW + PADDING * 2;
+    var canvasH = HEADER_H + gridH + FOOTER_H + PADDING;
+
+    var canvas = document.createElement("canvas");
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    var ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#f3f6fb";
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // Title
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "bold 16px 'Noto Sans JP', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(T.imageTitle, canvasW / 2, PADDING + 18);
+
+    // Load and draw card images
+    var imagePromises = selected.map(function (card, idx) {
+      if (!card) return Promise.resolve(null);
+      var url = getImageUrl(card);
+      if (!url) {
+        console.warn("Slot " + idx + ": no image URL", card.name);
+        return Promise.resolve(null);
+      }
+      console.log("Slot " + idx + ": loading", url);
+      return loadImage(url).then(function (img) {
+        console.log("Slot " + idx + ":", img ? "OK" : "FAILED");
+        return img;
+      });
+    });
+
+    var images = await Promise.all(imagePromises);
+    var loaded = images.filter(Boolean).length;
+    console.log("Images loaded: " + loaded + " / " + filledCount());
+
+    for (var i = 0; i < MAX_CARDS; i++) {
+      var col = i % COLS;
+      var row = Math.floor(i / COLS);
+      var x = PADDING + col * (CARD_W + GAP);
+      var y = HEADER_H + row * (CARD_H + GAP);
+
+      if (images[i]) {
+        // Round corners via clipping
+        var r = 8;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + CARD_W - r, y);
+        ctx.quadraticCurveTo(x + CARD_W, y, x + CARD_W, y + r);
+        ctx.lineTo(x + CARD_W, y + CARD_H - r);
+        ctx.quadraticCurveTo(x + CARD_W, y + CARD_H, x + CARD_W - r, y + CARD_H);
+        ctx.lineTo(x + r, y + CARD_H);
+        ctx.quadraticCurveTo(x, y + CARD_H, x, y + CARD_H - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(images[i], x, y, CARD_W, CARD_H);
+        ctx.restore();
+      } else {
+        // Empty slot placeholder
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x, y, CARD_W, CARD_H);
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 6]);
+        ctx.strokeRect(x + 1.5, y + 1.5, CARD_W - 3, CARD_H - 3);
+        ctx.setLineDash([]);
+      }
+    }
+
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (b) { resolve(b); }, "image/png");
+    });
+  }
+
   async function saveAsImage() {
     if (filledCount() === 0) return;
 
@@ -893,95 +993,7 @@
     saveImgBtn.textContent = T.generating;
 
     try {
-      var CARD_W = 200;
-      var CARD_H = 279;
-      var GAP = 8;
-      var COLS = 3;
-      var PADDING = 20;
-      var HEADER_H = 44;
-      var FOOTER_H = 12;
-
-      var gridW = COLS * CARD_W + (COLS - 1) * GAP;
-      var rows = 3;
-      var gridH = rows * CARD_H + (rows - 1) * GAP;
-
-      var canvasW = gridW + PADDING * 2;
-      var canvasH = HEADER_H + gridH + FOOTER_H + PADDING;
-
-      var canvas = document.createElement("canvas");
-      canvas.width = canvasW;
-      canvas.height = canvasH;
-      var ctx = canvas.getContext("2d");
-
-      // Background
-      ctx.fillStyle = "#f3f6fb";
-      ctx.fillRect(0, 0, canvasW, canvasH);
-
-      // Title
-      ctx.fillStyle = "#1e293b";
-      ctx.font = "bold 16px 'Noto Sans JP', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(T.imageTitle, canvasW / 2, PADDING + 18);
-
-      // Load and draw card images
-      var imagePromises = selected.map(function (card, idx) {
-        if (!card) return Promise.resolve(null);
-        var url = getImageUrl(card);
-        if (!url) {
-          console.warn("Slot " + idx + ": no image URL", card.name);
-          return Promise.resolve(null);
-        }
-        console.log("Slot " + idx + ": loading", url);
-        return loadImage(url).then(function (img) {
-          console.log("Slot " + idx + ":", img ? "OK" : "FAILED");
-          return img;
-        });
-      });
-
-      var images = await Promise.all(imagePromises);
-      var loaded = images.filter(Boolean).length;
-      console.log("Images loaded: " + loaded + " / " + filledCount());
-
-      for (var i = 0; i < MAX_CARDS; i++) {
-        var col = i % COLS;
-        var row = Math.floor(i / COLS);
-        var x = PADDING + col * (CARD_W + GAP);
-        var y = HEADER_H + row * (CARD_H + GAP);
-
-        if (images[i]) {
-          // Round corners via clipping
-          var r = 8;
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(x + r, y);
-          ctx.lineTo(x + CARD_W - r, y);
-          ctx.quadraticCurveTo(x + CARD_W, y, x + CARD_W, y + r);
-          ctx.lineTo(x + CARD_W, y + CARD_H - r);
-          ctx.quadraticCurveTo(x + CARD_W, y + CARD_H, x + CARD_W - r, y + CARD_H);
-          ctx.lineTo(x + r, y + CARD_H);
-          ctx.quadraticCurveTo(x, y + CARD_H, x, y + CARD_H - r);
-          ctx.lineTo(x, y + r);
-          ctx.quadraticCurveTo(x, y, x + r, y);
-          ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(images[i], x, y, CARD_W, CARD_H);
-          ctx.restore();
-        } else {
-          // Empty slot placeholder
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(x, y, CARD_W, CARD_H);
-          ctx.strokeStyle = "#cbd5e1";
-          ctx.lineWidth = 3;
-          ctx.setLineDash([10, 6]);
-          ctx.strokeRect(x + 1.5, y + 1.5, CARD_W - 3, CARD_H - 3);
-          ctx.setLineDash([]);
-        }
-      }
-
-      // Save: モバイルはWeb Share API、PCはダウンロード
-      var blob = await new Promise(function (resolve) {
-        canvas.toBlob(function (b) { resolve(b); }, "image/png");
-      });
+      var blob = await generateCardBlob();
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       var shared = false;
