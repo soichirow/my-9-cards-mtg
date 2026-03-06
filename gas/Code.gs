@@ -15,19 +15,30 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
 
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ログ");
+    if (!sheet) {
+      sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("ログ");
+    }
 
     // ヘッダーがなければ作成
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["日時", "言語", "プラットフォーム", "カード名"]);
+      var header = ["日時", "言語", "プラットフォーム", "カード名"];
+      for (var h = 1; h <= 9; h++) header.push("カード" + h);
+      sheet.appendRow(header);
     }
 
     var timestamp = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd HH:mm:ss");
     var lang = data.lang || "unknown";
     var platform = data.platform || "unknown";
-    var cards = (data.cards || []).join(", ");
+    var cards = data.cards || [];
+    var cardsSummary = cards.join(", ");
 
-    sheet.appendRow([timestamp, lang, platform, cards]);
+    var row = [timestamp, lang, platform, cardsSummary];
+    for (var i = 0; i < 9; i++) {
+      row.push(cards[i] || "");
+    }
+
+    sheet.appendRow(row);
 
     return ContentService.createTextOutput(JSON.stringify({ status: "ok" }))
       .setMimeType(ContentService.MimeType.JSON);
