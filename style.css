@@ -635,7 +635,17 @@ footer {
   text-decoration: none;
 }
 
-.footer-links a:hover, .footer-credit a:hover, .footer-legal a:hover {
+.footer-support {
+  margin-top: 6px;
+  font-size: 0.6rem;
+}
+
+.footer-support a {
+  color: #c0c8d0;
+  text-decoration: none;
+}
+
+.footer-links a:hover, .footer-credit a:hover, .footer-legal a:hover, .footer-support a:hover {
   color: #3b82f6;
   text-decoration: underline;
 }
