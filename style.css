@@ -604,11 +604,6 @@ main {
 .load-more-btn:hover { background: #eff6ff; border-color: #93c5fd; }
 .load-more-btn:disabled { color: #94a3b8; cursor: wait; }
 
-/* ── Ko-fi ── */
-.kofi-wrap {
-  margin-bottom: 12px;
-}
-
 /* ── Footer ── */
 footer {
   text-align: center;
