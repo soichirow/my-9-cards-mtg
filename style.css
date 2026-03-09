@@ -636,9 +636,28 @@ footer {
   color: #b0bec5;
 }
 
-.footer-credit a {
-  color: #b0bec5;
-  text-decoration: none;
+.footer-socials {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 6px 0 8px;
+}
+
+.footer-socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.footer-socials a:hover { color: #475569; }
+
+.footer-socials svg {
+  width: 18px;
+  height: 18px;
 }
 
 .footer-links {
